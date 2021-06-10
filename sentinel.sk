@@ -42,7 +42,544 @@ function timeFormat(t: text) :: text:
 		return {_t}
 	if {_t} ends with "h":
 		replace "h" in {_t} with " Hours"
+		return {_t}options:
+	prefix: &5&lSENTINEL&r
+	punish: &c&lPUNISH&r
+	staff: &e&lSTAFF&r
+	freeze: &b&lFREEZE&r
+	discord: https://discord.gg/tBGrp68GtK # This can be any link
+	sentinel: &5&lSENTINEL&r
+	tips: &a&lPSSST!&r 
+	logo: &c&lVANISH &8-
+	permission: staff
+	permissionm: &4You do not have access to this command!
+	permissionalert: staff
+
+# Create options for freeze section; freeze message, freeze timer, freeze discord, stuff like that.
+# Integrate options into script.
+	ver: b.1.0
+	ssTime: 3 minutes 
+	failSS: /ban %arg-1% 7d Failure to join SS
+# Functions
+function addPunishment(type: text, punished: offline player, timeframe: text, reason: text, issuer: player):
+	set {_typeReturn} to "&cBAN&r" if {_type} is "ban"
+	set {_typeReturn} to "&eMUTE&r" if {_type} is "mute"
+	set {_typeReturn} to "&e&oWARN&r" if {_type} is "warn"
+	set {punish::punishID::%{_punished}%::%{_type}%} to punishmentID()
+	set {_ID} to {punish::punishID::%{_punished}%::%{_type}%}
+	if {_type} is not "warn":
+		set {punish::date::%{_punished}%::%{_type}%} to now
+		set {punish::date2::%{_punished}%::%{_type}%} to ({_timeframe} parsed as timespan) from now if {_timeframe} != "forever"
+		set {punish::date2::%{_punished}%::%{_type}%} to "-" if {_timeframe} = "forever"
+	else:
+		set {punish::date::%{_punished}%::%{_type}%} to "%now%" 
+		set {punish::date2::%{_punished}%::%{_type}%} to "N/A" 
+	add "&7• <tooltip:&7ID&f: %{_ID}%%nl%Issued by: %{_issuer}%%nl%Duration: %{_timeframe}%%nl%Issued: %{punish::date::%{_punished}%::%{_type}%}% GMT%nl%Expires: %{punish::date2::%{_punished}%::%{_type}%}% GMT%nl%%nl%Reason: %{_reason}%><suggest command:/pardon %{_punished}% %{_ID}%>%{_typeReturn}% %{_punished}%" to {punish::history::%{_punished}%::*}
+	add "&7• <tooltip:&7ID&f: %{_ID}%%nl%Issued by: %{_issuer}%%nl%Duration: %{_timeframe}%%nl%Issued: %{punish::date::%{_punished}%::%{_type}%}% GMT%nl%Expires: %{punish::date2::%{_punished}%::%{_type}%}% GMT%nl%%nl%Reason: %{_reason}%><suggest command:/pardon %{_punished}% %{_ID}%>%{_typeReturn}% %{_punished}%" to {punish::database::*}
+	
+function timeFormat(t: text) :: text:
+	if {_t} ends with "s":
+		replace "s" in {_t} with " Seconds"
 		return {_t}
+	if {_t} ends with "m":
+		replace "m" in {_t} with " Minutes"
+		return {_t}
+	if {_t} ends with "h":
+		replace "h" in {_t} with " Hours"
+		return {_t}
+	if {_t} ends with "d":
+		replace "d" in {_t} with " Days"
+		return {_t}
+	if {_t} ends with "w":
+		replace "w" in {_t} with " Weeks"
+		return {_t}
+	if {_t} ends with "mo":
+		replace "mo" in {_t} with " Months"
+		return {_t}
+	if {_t} ends with "y":
+		replace "y" in {_t} with " Years"
+		return {_t}
+	if {_t} = "f":
+		return "forever"
+	
+function parseTime(t: text) :: timespan:
+	replace all " " in {_t} with ""
+	set {_total} to 0 seconds
+	if {_t} contains "d":
+		replace all "days" in {_t} with ""
+		replace all "day" in {_t} with ""
+		replace all "d" in {_t} with ""
+		set {_time} to {_t} parsed as number
+		set {_timespan} to "%{_time}% days" parsed as timespan
+		add {_timespan} to {_total}
+	else if {_t} contains "h":
+		replace all "hours" in {_t} with ""
+		replace all "hour" in {_t} with ""
+		replace all "h" in {_t} with ""
+		set {_time} to {_t} parsed as number
+		set {_timespan} to "%{_time}% hours" parsed as timespan
+		add {_timespan} to {_total}
+	else if {_t} contains "mo":
+		replace all "months" in {_t} with ""
+		replace all "month" in {_t} with ""
+		replace all "mon" in {_t} with ""
+		replace all "mo" in {_t} with ""
+		set {_time} to {_t} parsed as number
+		set {_timespan} to "%{_time}*30% days" parsed as timespan
+		add {_timespan} to {_total}
+	else if {_t} contains "m":
+		replace all "minutes" in {_t} with ""
+		replace all "minute" in {_t} with ""
+		replace all "min" in {_t} with ""
+		replace all "m" in {_t} with ""
+		set {_time} to {_t} parsed as number
+		set {_timespan} to "%{_time}% minutes" parsed as timespan
+		add {_timespan} to {_total}
+	else if {_t} contains "y":
+		replace all "years" in {_t} with ""
+		replace all "year" in {_t} with ""
+		replace all "ye" in {_t} with ""
+		replace all "y" in {_t} with ""
+		set {_time} to {_t} parsed as number
+		set {_timespan} to "%{_time}*365% days" parsed as timespan
+		add {_timespan} to {_total}
+	else if {_t} contains "w":
+		replace all "weeks" in {_t} with ""
+		replace all "week" in {_t} with ""
+		replace all "w" in {_t} with ""
+		set {_time} to {_t} parsed as number
+		set {_timespan} to "%{_time}*7% days" parsed as timespan
+		add {_timespan} to {_total}
+	else if {_t} contains "s":
+		replace all "seconds" in {_t} with ""
+		replace all "second" in {_t} with ""
+		replace all "sec" in {_t} with ""
+		replace all "s" in {_t} with ""
+		set {_time} to {_t} parsed as number
+		set {_timespan} to "%{_time}% seconds" parsed as timespan
+		add {_timespan} to {_total}
+	return {_total}	
+# Credits to MisterBasic for this time parser.
+function punishmentID() :: integer:
+	add 1 to {punish::punishments} 
+	return {punish::punishments}
+
+function pardonPunishment(type: text, p: offline player, issuer: player, id: integer):	
+	set {_r} to {punish::database::%{_id}%}
+	loop {punish::history::%{_p}%::*}:
+		loop-value contains "&7ID&f: %{_id}%"
+		set {r.place} to loop-value
+		set {r.id} to loop-index
+	replace "&cBAN&r" in {r.place} with "<tooltip:&7ID&f: %{_id}%%nl%Issued by: %{punish::issuer::%{_p}%::ban}%%nl%Duration: %{punish::time::%{_p}%::ban}%%nl%Issued: %{punish::date::%{_p}%::%{_type}%}% GMT%nl%Expires: %{punish::date2::%{_p}%::%{_type}%}% GMT%nl%%nl%Reason: %{punish::reason::%{_p}%::%{_type}%}%%nl%Pardoned by: %{_issuer}% on %now% GMT>&7&mBAN&r" if {_type} = "ban"
+	replace "&eMUTE&r" in {r.place} with "<tooltip:&7ID&f: %{_id}%%nl%Issued by: %{punish::issuer::%{_p}%::mute}%%nl%Duration: %{punish::time::%{_p}%::mute}%%nl%Issued: %{punish::date::%{_p}%::%{_type}%}% GMT%nl%Expires: %{punish::date2::%{_p}%::%{_type}%}% GMT%nl%%nl%Reason: %{punish::reason::%{_p}%::%{_type}%}%%nl%Pardoned by: %{_issuer}% on %now% GMT>&7&mMUTE&r" if {_type} = "mute"
+	replace "&e&oWARN&r" in {r.place} with "<tooltip:&7ID&f: %{_id}%%nl%Issued by: %{punish::issuer::%{_p}%::warn}%%nl%Duration: N/A%nl%Issued: %{punish::date::%{_p}%::%{_type}%}% GMT%nl%Expires: %{punish::date2::%{_p}%%{_type}%}% GMT%nl%%nl%Reason: %{punish::reason::%{_p}%%{_type}%}%%nl%Pardoned by: %{_issuer}% on %now% GMT>&7&m&oWARN&r" if {_type} = "warn"
+	replace {punish::history::%{_p}%::%{r.id}%} in {punish::history::%{_p}%::*} with {r.place}
+	delete {r.place}
+	delete {r.id}
+	if {_id} = {punish::punishID::%{_p}%::ban}:
+		set {_i} to {_p}'s uuid
+		delete {ban::%{_i}%}
+		delete {punish::punishID::%{_p}%::ban}
+		send formatted "{@punish} &7| &c%{_issuer}% &7has unbanned &c%{_p}%%nl%&7You can view their pardoned punishment here! %{punish::database::%{_id}%}%" to all players where [input has permission "*"]
+		stop
+	if {_id} = {punish::punishID::%{_p}%::mute}:
+		set {_i} to {_p}'s uuid
+		delete {mute::%{_i}%}
+		delete {punish::punishID::%{_p}%::mute}
+		send formatted "{@punish} &7| &c%{_issuer}% &7has unmuted &c%{_p}%%nl%&7You can view their pardoned punishment here! %{punish::database::%{_id}%}%" to all players where [input has permission "*"]
+		stop
+	else:
+		send formatted "{@punish} &7| &c%{_issuer}% &7has cleared a punishment for &c%{_p}%%nl%&7You can view their pardoned punishment here! %{punish::database::%{_id}%}%" to all players where [input has permission "*"]
+
+function punishMessage(type: text, p: player, timeframe: text, reason: text):
+	if {_type} = "ban":
+		set {_scheme} to "&c" 
+		send formatted "&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-{@prefix}&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-%nl%%{_scheme}%You have been punished on our network!%nl%%nl%&7ID: &f%{punish::punishID::%{_p}%::%{_type}%}%%nl%&7Type: %{_scheme}%Ban%nl%&7Timespan: %{_scheme}%%{punish::time::%{_p}%::%{_type}%}%%nl%&7Reason: %{_scheme}%%{punish::reason::%{_p}%::%{_type}%}%%nl%&7Issued: %{_scheme}%%{punish::date::%{_p}%::%{_type}%}%%nl%&7Expires: %{_scheme}%%{punish::date2::%{_p}%::%{_type}%}%%nl%%nl%&7&oIf you feel that your punishment was false, please do not hesitate to view the following links.%nl%<tooltip:&6Join our Discord to appeal your punishment!><url:https://discord.gg/3Gru9wxXvD>&6&l[APPEAL]%nl%&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-{@prefix}&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-" to {_p}
+	if {_type} = "mute":
+		set {_scheme} to "&e" 
+		send formatted "&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-{@prefix}&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-%nl%%{_scheme}%You have been punished on our network!%nl%%nl%&7ID: &f%{punish::punishID::%{_p}%::%{_type}%}%%nl%&7Type: %{_scheme}%Mute%nl%&7Timespan: %{_scheme}%%{punish::time::%{_p}%::%{_type}%}%%nl%&7Reason: %{_scheme}%%{punish::reason::%{_p}%::%{_type}%}%%nl%&7Issued: %{_scheme}%%{punish::date::%{_p}%::%{_type}%}%%nl%&7Expires: %{_scheme}%%{punish::date2::%{_p}%::%{_type}%}%%nl%%nl%&7&oIf you feel that your punishment was false, please do not hesitate to view the following links.%nl%<tooltip:&6Join our Discord to appeal your punishment!><url:https://discord.gg/3Gru9wxXvD>&6&l[APPEAL] <tooltip:&7Click here to review the rules.><suggest command:/rules>&c&l[RULES] <tooltip:&7Click here to view your punishment history!><suggest command:/history>&e&l[HISTORY]%nl%&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-{@prefix}&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-" to {_p}
+	if {_type} = "warn":
+		set {_scheme} to "&e&o" 
+		send formatted "&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-{@prefix}&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-%nl%%{_scheme}%You have been punished on our network!%nl%%nl%&7ID: &f%{punish::punishID::%{_p}%::%{_type}%}%%nl%&7Type: %{_scheme}%Warn%nl%&7Reason: %{_scheme}%%{punish::reason::%{_p}%::%{_type}%}%%nl%&7Issued: %{_scheme}%%{punish::date::%{_p}%::%{_type}%}%%nl%&7Expires: %{_scheme}%%{punish::date2::%{_p}%::%{_type}%}%%nl%%nl%&7&oIf you feel that your punishment was false, please do not hesitate to view the following links.%nl%<tooltip:&6Join our Discord to appeal your punishment!><url:https://discord.gg/3Gru9wxXvD>&6&l[APPEAL] <tooltip:&7Click here to review the rules.><suggest command:/rules>&c&l[RULES] <tooltip:&7Click here to view your punishment history!><suggest command:/history>&e&l[HISTORY]%nl%&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-{@prefix}&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-&c-&4-" to {_p}
+function getType(pun: string) :: string:
+	return "Ban" if {_pun} contains "&cBAN&r"
+	return "Mute" if {_pun} contains "&eMUTE&r"
+	return "Warn" if {_pun} contains "&e&oWARN&r"
+
+
+# Commands
+function isSilent(t: text) :: boolean:
+	return true if {_t} contains "-s"
+	return false
+function globalPun(b: boolean, p: offline player, issuer: player, t: text):
+	set {_typeReturn} to "&c[BAN]&r" if {_t} is "ban"
+	set {_typeReturn} to "&e[MUTE]&r" if {_t} is "mute"
+	set {_typeReturn} to "&e&o[WARN]&r" if {_t} is "warn"
+	send formatted "{@sentinel}&r&5&o-----------------%nl%&d&o%{_p}%&r&7 was punished!%nl%<tooltip:&7Issued: &d%{punish::date::%{_p}%::%{_t}%}%%nl%&7Expires: &d%{punish::date2::%{_p}%::%{_t}%}%%nl%&7Duration: &d%{punish::time::%{_p}%::%{_t}%}%%nl%%nl%&7Reason: &d%{punish::reason::%{_p}%::%{_t}%}%>%{_typeReturn}%&7&o Hover to view details!" to all players where [input does not have permission "staff"] if {_b} = false
+	send formatted "{@sentinel}&r&5&o-----------------%nl%&d&o%{_p}%&r&7 was punished by %{_issuer}%&7!%nl%<tooltip:&7Issued: &d%{punish::date::%{_p}%::%{_t}%}%%nl%&7Expires: &d%{punish::date2::%{_p}%::%{_t}%}%%nl%&7Duration: &d%{punish::time::%{_p}%::%{_t}%}%%nl%%nl%&7Reason: &d%{punish::reason::%{_p}%::%{_t}%}%%nl%&7&oIssued by %{_issuer}%>%{_typeReturn}%&7&o Hover to view details!" to all players where [input has permission "staff"]
+#&7IsSilent: %isSilent({punish::reason::%{_p}%::%{_t}%})%
+command kick <player> <text>:
+	permission: staff.kick
+	trigger:
+		kick arg-1 because "&a&lKICK &8| &7You have been kicked for reason: &c%arg-2%"
+command ban <offline player> <text> <text>:
+	permission: staff.ban
+	trigger: 
+		set {_p} to ("%arg-1%" parsed as player)
+		set {punish::time::%arg-1%::ban} to timeFormat(arg-2)
+		set {punish::reason::%arg-1%::ban} to arg-3
+		replace " -s " in {punish::reason::%arg-1%::ban} with "" if isSilent(arg-3)
+		set {punish::issuer::%arg-1%::ban} to player
+		set {ban::%arg-1's uuid%} to true
+		addPunishment("ban", arg-1, {punish::time::%arg-1%::ban}, {punish::reason::%arg-1%::ban}, {punish::issuer::%arg-1%::ban})
+		punishMessage("ban", arg-1, {punish::time::%arg-1%::ban}, {punish::reason::%arg-1%::ban})
+		send "&c&lPUNISH &8| &7You have banned user &c%arg-1% &7for &c%timeFormat(arg-2)% &7due to &c%arg-3%" to player
+		kick arg-1
+		remove arg-1 from {frozenPlayers::*} if {frozenPlayers::*} contains arg-1
+		globalPun(isSilent(arg-3), arg-1, player, "ban")
+command mute <offline player> <text> <text>:
+	permission: staff.mute
+	trigger:
+		set {punish::time::%arg-1%::mute} to timeFormat(arg-2)
+		set {punish::reason::%arg-1%::mute} to arg-3
+		replace "-s" in {punish::reason::%arg-1%::mute} with "" if isSilent(arg-3)
+		set {punish::issuer::%arg-1%::mute} to player
+		set {mute::%arg-1's uuid%} to true
+		addPunishment("mute", arg-1, {punish::time::%arg-1%::mute}, {punish::reason::%arg-1%::mute}, {punish::issuer::%arg-1%::mute})
+		punishMessage("mute", arg-1, {punish::time::%arg-1%::mute}, {punish::reason::%arg-1%::mute})
+		send "&c&lPUNISH &8| &7You have muted user &c%arg-1% &7for &c%timeFormat(arg-2)% &7due to &c%arg-3%" to player
+		globalPun(isSilent(arg-3), arg-1, player, "mute")
+
+command warn <offline player> <text>:
+	permission: staff.warn
+	trigger:
+		set {punish::reason::%player%::warn} to arg-2
+		replace "-s" in {punish::reason::%arg-1%::warn} with "" if isSilent(arg-2)
+		set {punish::issuer::%player%::warn} to player
+		addPunishment("warn", arg-1, "N/A", {punish::reason::%player%::warn}, {punish::issuer::%player%::warn})
+		punishMessage("warn", arg-1, {punish::time::%player%::warn}, {punish::reason::%player%::warn})
+		send "&c&lPUNISH &8| &7You have warned user &c%arg-1% &7for &c%arg-2%" to player
+		globalPun(isSilent(arg-2), arg-1, player, "warn")
+# Debug Feature for now
+command database [<text>] [<text>]:
+	permission: staff.database
+	trigger:
+		if arg-1 is set:
+			if arg-1 is "clear":
+				send "{punish::punishments} = %{punish::punishments}%%nl%Cleared!"
+				delete {punish::punishments}
+				delete {punish::history::*}
+				delete {punish::database::*}
+			if arg-1 is "filter":
+				add "Found these punishments which contain %arg-2%" to {_list::*}
+				loop {punish::database::*}:
+					loop-value contains arg-2
+					add loop-value to {_list::*}
+				loop {_list::*}:
+					send formatted "%loop-value%" to player
+
+command punishments [<offline player>]:
+	aliases: history, p
+	trigger:
+		if arg-1 is not set: 
+			send "&c-&4-&c-&4-&c-&4-&c-&4-&c%player%&c's Punishments&4-&c-&4-&c-&4-&c-&4-&c-"
+			loop {punish::history::%player%::*}:
+				send formatted "%loop-value%"
+		else:
+			player has permission "staff.punishments"
+			send "&c-&4-&c-&4-&c-&4-&c-&4-&c%arg-1%&c's Punishments&4-&c-&4-&c-&4-&c-&4-&c-"
+			loop {punish::history::%arg-1%::*}:
+				send formatted "%loop-value%"
+command pardon <offline player> <integer>:
+	permission: staff.pardon
+	trigger:
+		set {_type} to getType({punish::database::%arg-2%})
+		pardonPunishment({_type}, arg-1, player, arg-2)
+
+on skbee tab complete of "/pardon":
+	set tab completions of position 2 to {punish::punishID::%tab arg-1%::ban} and {punish::punishID::%tab arg-1%::mute}
+	send formatted "&c&lPUNISH &r&7| You can pardon the following punishments!" to player if tab arg-1 is set
+	send formatted "%{punish::database::%{punish::punishID::%tab arg-1%::ban}%}%" if {punish::database::%{punish::punishID::%tab arg-1%::ban}%} exists
+	send formatted "%{punish::database::%{punish::punishID::%tab arg-1%::mute}%}%" if {punish::database::%{punish::punishID::%tab arg-1%::mute}%} exists
+on chat:
+	set {_wait} to difference between {punish::date::%player%::mute} and now
+	set {_wait} to parseTime({_wait})
+	set {_need} to parseTime({punish::time::%player%::mute})
+	{mute::%player's uuid%} is set
+	if {_wait} < {_need}:
+		if player has permission "op":
+			send "You're exempt from mutes but wouldn't be able to chat otherwise"
+		else:
+			punishMessage("mute", player, {punish::time::%player%::mute}, {punish::reason::%player%::mute})
+			cancel event
+on join:
+	set {_wait} to difference between {punish::date::%player%::ban} and now
+	set {_wait} to parseTime({_wait})
+	set {_need} to parseTime({punish::time::%player%::ban})
+	{ban::%player's uuid%} is set
+	if {_wait} < {_need}:
+		punishMessage("ban", player, {punish::time::%player%::ban}, {punish::reason::%player%::ban})
+		kick player
+
+# Freeze Stuff
+command freeze [<player>]:
+	permission: staff
+	trigger:
+		arg-1 is set
+		if checkFrozen(arg-1):
+			remove arg-1 from {frozenPlayers::*}
+			send "&aYou have unfrozen %arg-1%"
+		else:
+			add arg-1 to {frozenPlayers::*}
+			teleport arg-1 to spawn
+			send formatted "&aYou have frozen %arg-1%%nl%<tooltip: &7Sends the frozen player the link to come in for a screenshare><command:/ss %arg-1%>&c&l[SS] <tooltip: &7View this player's alts><command:/alts %arg-1%>&c&l[ALTS] <tooltip:&7View this player's history><command:/history %arg-1%>&e&l[HISTORY] <tooltip:&cBans the player%nl%&7&oUse this if the player is blatant!><command:/ban %arg-1% 7d Blacklisted Modifications>&c&l[BAN]" to player
+		freezeMessage(arg-1)	
+command screenshare [<player>]:
+	permission: staff
+	aliases: ss
+	trigger:
+		if checkFrozen(arg-1) != true:
+			make player execute command "/freeze %arg-1%"
+		send formatted "&bPlease join our discord for a screenshare!%nl%<tooltip:Click here to join the screenshare! You've got {@ssTime}!><url:{@discord}>&c&l[SS]" to arg-1
+		send formatted "&aYou have requested %arg-1% &ato screenshare. They have {@ssTime} &ato join for a screenshare.%nl%<tooltip:%now% GMT>Test" to player	 
+		wait {@ssTime}
+		send formatted "<tooltip:&cClick this if they have failed to screenshare within the time!><command:{@failSS}>&cBAN &7&oClick this if they failed to join the screenshare within the given time!" to player
+
+function freezeMessage(p: player):
+	if checkFrozen({_p}):
+		send formatted "{@freeze}&b-----------------%nl%&bYou have been frozen! DO NOT LOG OUT!%nl%&bPlease await further instructions from a staff member!" to {_p}
+		send action bar "&bYou are frozen! Please await instructions from a staff member! DO NOT LOG OUT!" to {_p}
+	else:
+		send formatted "{@freeze} &aYou have been unfrozen, thanks for cooperating!" to {_p}
+function checkFrozen(p: player) :: boolean:
+	return true if {frozenPlayers::*} contains {_p}
+	return false
+
+on any move:
+	if checkFrozen(player):
+		teleport player to spawn
+		freezeMessage(player)
+on damage:
+	if checkFrozen(victim) or checkFrozen(attacker):
+		cancel event
+		send "&cYou cannot damage this player, as this player is frozen." to attacker if checkFrozen(victim)
+		send "&cYou cannot damage players, as you are frozen." to attacker if checkFrozen(attacker)
+on quit:
+	if checkFrozen(player):
+		send formatted "<tooltip:&7Click here to ban!><command:/ban %player% 7d Leaving whilst frozen>&c%player% has logged out whilst frozen, click here to ban!" to all players where [input has permission "staff"]
+on chat:
+	if checkFrozen(player):
+		cancel event
+		send "&b&lFROZEN&r &7%player%&7: %message%" to all players where [input has permission "staff"] and {frozenPlayers::*}
+command fchat [<text>]:
+	permission: staff
+	trigger:
+		send "&c&lSTAFF&r &7%player%&7: &f%arg-1%" to all players where [input has permission "staff"] and {frozenPlayers::*}
+
+# What to do next:
+# Rework Alt System (Currently, it appears to not work) time for pain loool
+on join:
+	add player to {players::%player's IP%::*} if {players::%player's IP%::*} does not contain player
+	size of {players::%player's IP%::*} > 1
+	set {_playerList::*} to {players::%player's IP%::*}
+	send "&7Recognized player &c&o%player%&r&7 joined &8|&7 Recognized alts" to all players where [input has permission "staff.alertalts"] #Replace with "input has permission ".*" if we use permission modules 
+	loop {_playerList::*}:
+		send formatted "&8• &a%altStatus(loop-value)%" to all players where [input has permission "staff.alertalts"] #Replace with "input has permission ".*" if we use permission modules
+
+command alts [<player>]:
+	permission: staff
+	trigger:
+		size of {players::%arg-1's IP%::*} > 1
+		set {_playerList::*} to {players::%arg-1's IP%::*}
+		send "&c&o%arg-1%&r &8|&7 Recognized alts" to player
+		loop {_playerList::*}:
+			send formatted "&8• &a%altStatus(loop-value)%" to player
+
+function altStatus(p: offline player) :: text:
+    set {_uuid} to {_p}'s uuid
+    set {_info} to "replace.prefix%{_p}%"
+    add "banned" to {_i::*} if {ban::%{_uuid}%} exists
+    add "muted" to {_i::*} if {mute::%{_uuid}%} exists
+    add "offline" to {_i::*} if {_p} is offline
+    if {_i::*} contains "banned":
+        replace "prefix" in {_info} with "&c"
+        replace "replace." in {_info} with "<tooltip:ID: %{punish::punishID::%{_p}%::ban}% | %getType({punish::database::%{punish::punishID::%{_p}%::ban}%})%%nl%Issued by %{punish::issuer::%{_p}%::ban}%%nl%Duration: %{punish::time::%{_p}%::ban}%%nl%Issued: %{punish::date::%{_p}%::ban}% GMT%nl%Expires: %{punish::date2::%{_p}%::ban}% GMT%nl%%nl%Reason: %{punish::reason::%{_p}%::ban}%%nl%&7&oClick to view this player's history!><command:/history %{_p}%>"
+    else if {_i::*} contains "muted":
+        replace "prefix" in {_info} with "&e"
+        replace "replace." in {_info} with "<tooltip:ID: %{punish::punishID::%{_p}%::mute}% | %getType({punish::database::%{punish::punishID::%{_p}%::mute}%})%%nl%Issued by %{punish::issuer::%{_p}%::mute}%%nl%Duration: %{punish::time::%{_p}%::mute}%%nl%Issued: %{punish::date::%{_p}%::mute}% GMT%nl%Expires: %{punish::date2::%{_p}%::mute}% GMT%nl%%nl%Reason: %{punish::reason::%{_p}%::mute}%%nl%&7&oClick to view this player's history!><command:/history %{_p}%>"
+    else if {_i::*} contains "offline":
+        replace "prefix" in {_info} with "&3"  
+    else:
+        replace "prefix" in {_info} with "&a"
+    replace "replace." in {_info} with "<tooltip:Click to view this player's history!><command:/history %{_p}%>"   
+    return {_info}
+# Integrate SmartTips into the finalized product NOT FINISHED
+on load:
+	send formatted "{@sentinel}&r&5&o-----------------%nl%&o&7Please refer to the following guide for a complete understanding of our system.%nl%&8&l|%nl%<link:https://docs.google.com/document/d/1R6rtFAa8ZwVSjC1lX61yGY0Oy0VhjnCHKCM4jeJsBTY/edit?usp=sharing><tooltip:&7Click here to understand how this punishment system works!>&c&l[GUIDE]&r &7&oClick me!<reset>%nl%&7&oYou are allowed to share this guide!%nl%&8&l|%nl%<tooltip:&7/sentinel%nl%%nl%&7Configure the modules and features you want for your server's moderation!>&d/sentinel &7&oServer Configuration Command<reset>%nl%<tooltip:&7This is toggleable in the config!>{@tips}<reset> &7&oSmartTips are here to guide newer staff members!%nl%&9&lGITHUB &c&oNot available atm, beta build.%nl%<tooltip:&7We offer support, moderation tips, and cookies!><link:https://discord.gg/zqBvGD6jnd>&5&lDISCORD<reset> &7&oScript Support and Updates%nl%&7Made with love by &c&omybeary##0900 &r&7(version {@ver})%nl%&5&o--------------------------" to all players where [input is op]
+# Integrate Customizability - Work on config shit
+	
+# literally beat SkripterMan lmaooo
+# ClearChat + MuteChat should be simple enough
+command chat [<text>]:
+	permission: staff
+	trigger:
+		if arg-1 is set:
+			if arg-1 is "clear":
+				loop 300 times:
+					send " " to all players where [input does not have permission "staff"]
+				send "&7%player%&7 cleared the chat" to all players
+			if arg-1 is "mute":
+				set {staff::chatmute} to false if {staff::chatmute} is true else true
+				send "&cChat has been muted" to all players if {staff::chatmute} is true
+				send "&aChat has been unmuted" to all players if {staff::chatmute} is false
+on skbee tab complete of "/chat":
+	set tab completions of position 1 to "clear" and "mute"
+on chat:
+	player does not have permission "staff"
+	cancel event if {staff::chatmute} is true 
+
+# Staff Mode would be a fucking pain lol - I did it lol.
+on right click on a player:
+	{vanishPlayers::*} contains player
+	{vanishPlayers::*} does not contain event-entity
+	send formatted "{@punish}&c %event-entity%-----%nl%<tooltip:&7Click this to freeze the player><command:/freeze %event-entity%>&b[FREEZE] &7&oUse this to freeze %event-entity%&7&o!%nl%<tooltip:&7Click this to view the player's alts><command:/alts %event-entity%>&c[ALTS] &7&oUse this to view %event-entity%&7&o's alts!%nl%<tooltip:&7Click this to view the player's history><command:/history %event-entity%>&e[HISTORY] &7&oUse this to view %event-entity%&7&o's punishment history!" to player
+# Command Spy would be interesting
+on command:
+	send "&7%player% &7executed &c/%full command%" to all players where [{punish::cmdspy::*} contains input]
+on skbee tab complete:
+	send "&7%player% &7attempted to tab complete &c%event-string%" to all players where [{punish::cmdspy::*} contains input]
+command commandspy:
+	aliases: cspy, cs
+	permission: staff
+	trigger:
+		if {punish::cmdspy::*} contains player: 
+			remove player from {punish::cmdspy::*} 
+			send "&cDisabled commandspy"
+		else:
+			add player to {punish::cmdspy::*} 
+			send "&aEnabled commandspy"
+
+# Reports would be a pain in the ass /reports
+command report [<player>] [<text>]:
+	trigger:
+		if arg-1 is set:
+			if arg-2 is set:
+				if {reportBan::*} contains player:
+					send "&cYou have been suspended from reporting!"
+					stop
+				send "&7You have reported &c%arg-1%&7 for &c%arg-2%"
+				send formatted "&c&lREPORT &r&c%player%&7 has reported &c%arg-1%&7 for &c%arg-2%%nl%<tooltip:&7Teleport to the player!><cmd:/tp-report %arg-1%>&c&l[TELEPORT]" to all players where [input has permission "staff"]
+				add arg-1 to {reportPlayers::*} if {reportPlayers::*} does not contain arg-1
+				add "%player%;%arg-1%;%arg-2%;%now%" to {reports::*}
+				add player to {report::%arg-1%::*}
+			else:
+				send "&3You must provide a reason!%nl%&5/report &7<player> &d<reason>%nl%&7&oYou may tab into suspected hacked modules for the reason!" to player
+		else:
+			send "&3You must provide a player!%nl%&5/report &d<player> &7<reason>%nl%&7&oYou may tab into suspected hacked modules for the reason!" to player
+command reports [<player>]:
+	permission: staff
+	trigger:
+		if arg-1 is not set:
+			send "&eReports &7&o(As of %now% &7&oGMT)"
+			sortReports(player, "reports")
+			stop
+		send "&eReports (%arg-1%&e) &7&o(As of %now% &7&oGMT)"
+		loop {reports::*}:
+			set {_test::*} to loop-value split at ";"
+			add loop-value to {%arg-1%::*} if {_test::2} = arg-1
+		sortReports(player, "%arg-1%")
+		delete {%arg-1%::*}
+
+function sortReports(p: player, t: text):
+	loop {%{_t}%::*}:
+		set {_i} to size of {%{_t}%::*}-((loop-index parsed as integer)-1)
+		set {_i::%{_i}%} to {%{_t}%::%loop-index%}
+	loop {_i::*}:
+		set {_test::*} to loop-value split at ";"
+		send formatted "&8[%loop-index%] <tooltip:&8[%loop-index%] &5%{_test::2}%&f - %{_test::3}% &7&o(%{_test::4}% GMT)%nl%Reported by: %{_test::1}%%nl%&7&oClick to teleport!><command:/tp %{_test::2}%>&5%{_test::2}%&f - %{_test::3}% &7&o(%{_test::4}% GMT)" to {_p}
+
+on skbee tab complete of "/report":
+	set tab completions of position 1 to all players
+	set tab completions of position 2 to {reportTAB::*}
+# This should be added onto the /tp command
+# Function
+function reportNotify(reported: player, reporter: player):
+	if {reportPlayers::*} contains {_reported}:
+		delete {report::%{_reported}%::*}
+		send "&7Your report on &c%{_reported}%&7 is currently being investigated.%nl%&7Thank you for making a report!" to {_reporter}
+on quit:
+	delete {report::%player%::*} if {report::%player%::*} exists
+
+command tp-report <player>:
+	permission: staff.teleport
+	trigger:
+		toggleVanish(player) if checkVanish(player) = false
+		teleport player to arg-1
+		send "&7Teleported to &d%arg-1%" to player
+		send "&c%player% &7is currently investigating &c%arg-1%" to all players where [input has permission "staff"]
+		reportNotify(arg-1, {report::%arg-1%::*})
+command report-ban <player>:
+	permission: staff
+	trigger:
+		send "hi"
+# I'm tired lol.
+
+# Optimize Vanish
+
+on damage:
+	if checkVanish(attacker):
+		cancel event
+		send "&cYou cannot damage that player, as you are in vanish!" to attacker
+	if checkVanish(victim):
+		cancel event
+		send "&cYou cannot damage that player, as they are in vanish!" to attacker
+command /vanish [<offline player>]:
+	permission: {@permission}
+	permission message: {@permissionm}
+	aliases: /v
+	trigger:
+		if arg-1 is not set:
+			toggleVanish(player)
+			stop
+		toggleVanish(arg-1) if player is op
+function toggleVanish(p: player):
+	set {_test::*} to all players
+	if checkVanish({_p}) = false:
+		hide {_p} from all players
+		loop {_test::*}:
+			reveal {_p} to loop-value if loop-value has permission "{@permissionalert}"
+		send "{@logo} &7You are &cVanish&7. &7&oYou can now right click on players to list options for that player!" to {_p}
+		add {_p} to {vanishPlayers::*}
+		set {_p}'s fly state to true if {_p}'s gamemode is not creative or spectator
+		send "{@logo} &7The player &c%{_p}% &7is now in vanish." to all players where [input has permission "{@permissionalert}"]
+	else:	
+		reveal {_p} from all players
+		send "{@logo} &7You are no longer &cVanish&7." to {_p}
+		remove {_p} from {vanishPlayers::*}
+		set {_p}'s fly state to false if {_p}'s gamemode is not creative or spectator
+		send "{@logo} &7The player &c%{_p}% &7is no longer in vanish." to all players where [input has permission "{@permissionalert}"]
+function checkVanish(p: player) :: boolean:
+	return true if {vanishPlayers::*} contains {_p}
+	return false
+command /vanish-list:
+	permission: {@permission}
+	permission message: {@permissionm}
+	aliases: /vinfo
+	trigger:
+		send "{@logo} Here are all of the vanished players!" to player 
+		loop {vanishPlayers::*}:
+			send "&8 &c%loop-value%" to player 
+on quit:
+	if checkVanish(player):
+		toggleVanish(player) 
+on join:
+	reveal {vanishPlayers::*} to player if player has permission "staff"
+	while player is online:
+		send action bar "&aYou are in vanish" to player if checkVanish(player)
+		wait 3 seconds
+
+# Sentinel Leading moderation systems, optimizing ease of use. The ultimate solution for moderation.
+# /info <player>, has playtime, alts, previous names, punishment history, inventory, status (Online, offline, banned, muted, frozen, vanish)
 	if {_t} ends with "d":
 		replace "d" in {_t} with " Days"
 		return {_t}
